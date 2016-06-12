@@ -43,6 +43,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             logging.info("Start executing '%s'" % cmd)
             try:
                 Popen(cmd, env=env).wait()
+                logging.info("Removing None Docker Images")
+                remove_cmd = "/usr/bin/docker rmi $(docker images -a | grep \"^<none>\" | awk '{print $3}')"
+                Popen(remove_cmd, shell=True).wait()
                 self.send_response(200, "OK")
                 if 'callback_url' in json_params:
                     # Make a callback to Docker Hub
