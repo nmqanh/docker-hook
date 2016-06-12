@@ -33,15 +33,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_params = {}
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
-            if json_params['repository']:
+            if json_params['repository'] and hasattr(json_params['repository'], 'items'):
                 env.update(('REPOSITORY_' + var.upper(), str(val))
                            for var, val in json_params['repository'].items())
 
         # Check if the secret URL was called
         if self.path in hooks:
-            logging.info("Start executing '%s'" % hooks[self.path])
+            cmd = ["sh", hooks[self.path]]
+            logging.info("Start executing '%s'" % cmd)
             try:
-                Popen(hooks[self.path], env=env).wait()
+                Popen(cmd, env=env).wait()
                 self.send_response(200, "OK")
                 if 'callback_url' in json_params:
                     # Make a callback to Docker Hub
